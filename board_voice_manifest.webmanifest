@@ -1,0 +1,26 @@
+{
+  "name": "HIoT 實驗室電子布告牌",
+  "short_name": "HIoT Board",
+  "description": "HIoT 實驗室電子布告牌與語音留言看板",
+  "id": "./board_voice.html",
+  "start_url": "./board_voice.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
