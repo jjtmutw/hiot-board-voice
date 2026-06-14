@@ -138,10 +138,44 @@
     line-height:1.45;
     color:#dbe7ff;
   }
+  .boardUrlPanel{
+    display:grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap:12px;
+  }
+  .boardUrlBox{
+    display:flex;
+    gap:10px;
+    align-items:stretch;
+    flex-wrap:wrap;
+  }
+  .boardUrlBox input{ flex:1 1 280px; }
+  .qrPanel{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .qrCode{
+    width:180px;
+    height:180px;
+    border-radius:16px;
+    padding:10px;
+    background:#fff;
+    border:1px solid rgba(255,255,255,.16);
+    object-fit:contain;
+  }
+  .qrText{
+    flex:1 1 240px;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.6;
+  }
 
   @media (min-width: 860px){
     .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
     .statusGrid{ grid-template-columns: 1fr 1fr 1fr; }
+    .boardUrlPanel{ grid-template-columns: minmax(0, 1fr) auto; align-items:center; }
   }
 </style>
 </head>
@@ -245,10 +279,29 @@
     </div>
   </div>
 
-  <details class="card" open>
-    <summary>送出紀錄（Log）</summary>
-    <div id="log" class="log"></div>
-  </details>
+  <div class="card boardUrlPanel">
+    <div>
+      <div class="hTitle" style="font-size:16px;">顯示板網址</div>
+      <div class="hSub">平板電腦可掃描 QR Code 直接開啟目前 User / Board</div>
+
+      <label>Board URL</label>
+      <div class="boardUrlBox">
+        <input id="boardUrl" class="mono" readonly>
+        <button id="btnCopyBoardUrl" class="btn" type="button">複製網址</button>
+        <a id="openBoardUrl" class="btn primary" href="#" target="_blank" rel="noopener" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">開啟顯示板</a>
+      </div>
+    </div>
+
+    <div class="qrPanel">
+      <img id="boardQr" class="qrCode" alt="顯示板網址 QR Code">
+      <div class="qrText">
+        掃描後會開啟：<br>
+        <span id="boardUrlText" class="mono"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="log" class="log" hidden></div>
 
 </div>
 
@@ -288,6 +341,16 @@ buildBoardOptions();
 function user(){ return ($("userName").value || "").trim() || "pjj"; }
 function board(){ return ($("boardSelect").value || "").trim() || "board1"; }
 function base(){ return `JJ/${user()}/${board()}`; }
+function boardUrl(){
+  const params = new URLSearchParams({
+    user: user(),
+    board: board()
+  });
+  return `https://jjtmutw.github.io/hiot-board-voice/board_voice.html?${params.toString()}`;
+}
+function qrUrl(url){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=10&data=${encodeURIComponent(url)}`;
+}
 
 function tStatus(){ return `${base()}/status`; }
 function tMarq(){ return `${base()}/marquee`; }
@@ -296,10 +359,27 @@ function refreshTopics(){
   $("baseTopic").value = base();
   $("statusTopicTxt").textContent = tStatus();
   $("marqTopicTxt").textContent = tMarq();
+
+  const url = boardUrl();
+  $("boardUrl").value = url;
+  $("boardUrlText").textContent = url;
+  $("openBoardUrl").href = url;
+  $("boardQr").src = qrUrl(url);
 }
 
 $("userName").addEventListener("input", refreshTopics);
 $("boardSelect").addEventListener("change", refreshTopics);
+$("btnCopyBoardUrl").addEventListener("click", async () => {
+  const url = $("boardUrl").value;
+  try {
+    await navigator.clipboard.writeText(url);
+    $("btnCopyBoardUrl").textContent = "已複製";
+    setTimeout(() => { $("btnCopyBoardUrl").textContent = "複製網址"; }, 1200);
+  } catch (e) {
+    $("boardUrl").select();
+    document.execCommand("copy");
+  }
+});
 
 /* URL query parameters
    ?user=pjj&board=board3&mqtt=wss://...
