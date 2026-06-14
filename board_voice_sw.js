@@ -1,4 +1,4 @@
-const CACHE_NAME = "hiot-board-voice-v1";
+const CACHE_NAME = "hiot-board-voice-v2";
 const APP_SHELL = [
   "./board_voice.html",
   "./board_voice_manifest.webmanifest",
@@ -7,6 +7,19 @@ const APP_SHELL = [
   "./comlogo.png",
   "./tmutitle.png"
 ];
+
+function canCache(response) {
+  return response && response.ok && (response.type === "basic" || response.type === "default");
+}
+
+async function putInCache(request, response) {
+  if (!canCache(response)) return;
+
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response.clone());
+  } catch (e) { }
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -38,8 +51,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          putInCache(event.request, response);
           return response;
         })
         .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./board_voice.html")))
@@ -52,8 +64,7 @@ self.addEventListener("fetch", (event) => {
       .then((cached) => {
         const network = fetch(event.request)
           .then((response) => {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            putInCache(event.request, response);
             return response;
           })
           .catch(() => cached);
